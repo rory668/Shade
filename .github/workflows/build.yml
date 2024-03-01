@@ -1,0 +1,41 @@
+name: Build & Publish Debug APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      DEPLOY_TYPE:
+        description: 'Deploy Type (TEST/DEBUG)'
+        required: true
+        default: 'DEBUG'
+      ChangeLogs:
+        description: 'Build ChangeLogs'
+        required: true
+        default: 'Misc changes'
+  watch:
+    types: [started]
+
+jobs:
+  Gradle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: setup jdk
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Build APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload apk to Telegram
+        run: |
+           message="Shade debug build is up for testing"
+           curl -F chat_id="-1001379101256" -F document=@"build/outputs/apk/shade/debug/SystemUI.apk" -F caption="$message $time" https://api.telegram.org/bot1822006486:AAGX5JWqloJdIin7XbhjtVSsFWb06B3Uk1w/sendDocument
+
+
